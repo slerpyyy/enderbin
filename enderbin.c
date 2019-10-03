@@ -7,23 +7,27 @@
 const char* flag = "::ENDER::FLAG::\x05";
 const int flaglen = 15;
 
+const char* damage[] = {"OUGH!", "UMPFFF!!", "AARGH!"};
+const char* death[] = {"KRHHHHHHH", "AAAAAAAAAAAAAAAA!!!!"};
+
 int main(int argc, char* argv[])
 {
 	srand(time(NULL));
 
-	int num = *(flag + flaglen);
-	//printf("num: %d\n", num);
+	int health = *(flag + flaglen);
 
+	// wat
 	if(argc < 1)
 	{
 		puts("wat");
 		exit(-1);
 	}
 
-	if(num < 1)
+	if(health < 1)
 	{
 		remove(argv[0]);
-		puts("AAAAAAAAAAAAAAAA!!!!");
+		int i = rand() % 2;
+		printf("%s (0 hp)\n", death[i]);
 		exit(0);
 	}
 
@@ -45,7 +49,7 @@ int main(int argc, char* argv[])
 
 	while((curr = fgetc(in_file)) != EOF)
 	{
-		if(prog == flaglen)fputc(num - 1, out_file);
+		if(prog == flaglen)fputc(health - 1, out_file);
 		else fputc(curr, out_file);
 
 		if(curr == *(flag + prog))prog++;
@@ -58,7 +62,8 @@ int main(int argc, char* argv[])
 	chmod(tmp_name, 0x1ed);
 	rename(tmp_name, argv[0]);
 
-	puts("OUGH!");
+	int i = rand() % 3;
+	printf("%s (%d hp)\n", damage[i], health);
 
 	return 0;
 }
