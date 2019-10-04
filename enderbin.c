@@ -3,7 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <sys/stat.h>
-
+#include <dirent.h>
 
 
 const char* flag = "$::ENDER::FLAG::\x05";
@@ -19,9 +19,9 @@ const int death_len = 2;
 
 int main(int argc, char* argv[])
 {
-	srand(time(NULL));
-
 	int health = *(flag + flag_len);
+	
+	srand(time(NULL) - health);
 
 	if(argc < 1)
 	{
@@ -97,6 +97,46 @@ int main(int argc, char* argv[])
 
 	int damage_index = rand() % damage_len;
 	printf("%s (%d hp)\n", damage[damage_index], health);
+
+
+
+	char* path;
+	int seed = 1 | rand();
+	struct dirent* dent;
+	DIR* srcdir = opendir(".");
+	
+	while((dent = readdir(srcdir)) != NULL)
+	{
+		struct stat st;
+		if(fstatat(dirfd(srcdir), dent->d_name, &st, 0))
+		{
+			fprintf(stderr, "Could not index nearby file or directory\n");
+			exit(-1);
+		}
+		
+		if(!S_ISDIR(st.st_mode))continue;
+
+		if(seed & 1)path = dent->d_name;
+
+		seed /= 2;
+	}
+
+
+
+	int name_start = 0;
+	int argv0_len = strlen(argv[0]);
+	for(int i=0; i < argv0_len - 1; i++)
+	{
+		if(*(argv[0]+i) == '/')name_start = i + 1;
+	}
+
+	int name_len = strlen(path) + (argv0_len - name_start) + 1;
+	char* name = (char *)malloc(sizeof(char) * name_len);
+	sprintf(name, "%s/%s", path, argv[0] + name_start);
+
+	printf("%s -> %s\n", argv[0], name);
+
+	rename(argv[0], name);
 
 	return 0;
 }

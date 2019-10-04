@@ -1,4 +1,4 @@
 all: enderbin
 
 enderbin: enderbin.c
-	gcc enderbin.c -o enderbin -Wall -Wextra -Werror
+	gcc enderbin.c -o ender -Wall -Wextra -Werror
