@@ -6,21 +6,21 @@
 #include <dirent.h>
 
 
-const char* flag = "$::ENDER::FLAG::\x05";
+const char *flag = "$::ENDER::FLAG::\x05";
 const int flag_len = 16;
 
-const char* damage[] = {"OUGH!", "UMPFFF!!", "AARGH!"};
+const char *damage[] = {"OUGH!", "UMPFFF!!", "AARGH!"};
 const int damage_len = 3;
 
-const char* death[] = {"KRHHHHHHH", "AAAAAAAAAAAAAAAA!!!!"};
+const char *death[] = {"KRHHHHHHH", "AAAAAAAAAAAAAAAA!!!!"};
 const int death_len = 2;
 
 
-void rewrite(const char* file_name, int health)
+void rewrite(const char *file_name, int health)
 {
 	// Generate tmp name for code modification
 	int tmp_name_len = strlen(file_name) + 12;
-	char* tmp_name = (char *)malloc(sizeof(char) * tmp_name_len);
+	char *tmp_name = (char *)malloc(sizeof(char) * tmp_name_len);
 	sprintf(tmp_name, "%s.tmp%08X", file_name, rand());
 
 
@@ -80,45 +80,60 @@ void rewrite(const char* file_name, int health)
 }
 
 
-char *random_subdir()
+char *random_subdir(int iter)
 {
-	int seed = rand();
+	char *dir_name = ".";
+	struct dirent *dent;
+	DIR *srcdir;
+	int seed;
 
-	char* dir_name = NULL;
-	struct dirent* dent;
-	DIR* srcdir = opendir(".");	
-
-	// Loop over all files in pwd
-	while((dent = readdir(srcdir)) != NULL)
+	while(iter --> 0)
 	{
-		struct stat st;
-		if(fstatat(dirfd(srcdir), dent->d_name, &st, 0))
+		srcdir = opendir(dir_name);
+		char *found_name = NULL;
+		seed = rand();
+
+		// Loop over all files in pwd
+		while((dent = readdir(srcdir)) != NULL)
 		{
-			fprintf(stderr, "Could not index nearby file or directory\n");
-			exit(-1);
+			struct stat st;
+			if(fstatat(dirfd(srcdir), dent->d_name, &st, 0))
+			{
+				fprintf(stderr, "Could not index nearby file or directory\n");
+				exit(-1);
+			}
+
+			// Skip everything that isn't a directory
+			if(S_ISDIR(st.st_mode) == 0)continue;
+
+			// Skip the current directory
+			if(strcmp(dent->d_name, ".") == 0)continue;
+
+			// Save directory
+			if(seed & 1 || found_name == NULL)found_name = dent->d_name;
+
+			// Update random seed
+			if((seed /= 2) == 0)break;
 		}
 
-		// Skip everything that isn't a directory
-		if(S_ISDIR(st.st_mode) == 0)continue;
-
-		// Skip the current directory
-		if(strcmp(dent->d_name, ".") == 0)continue;
-
-		// Save directory
-		if(seed & 1 || dir_name == NULL)dir_name = dent->d_name;
-
-		// Update random seed
-		if((seed /= 2) == 0)break;
+		char *parent = dir_name;
+		int dir_name_len = strlen(parent) + strlen(found_name) + 1;
+		dir_name = (char *)malloc(sizeof(char) * dir_name_len);
+		sprintf(dir_name, "%s/%s", parent, found_name);
 	}
 
 	return dir_name;
 }
 
 
-void teleport(const char* file_name)
+void teleport(const char *file_name, int health)
 {
 	// Find a directory to teleport to
-	char* mv_dir = random_subdir();
+	int iter = 3 - health;
+	if(iter < 0)iter = 0;
+	iter = 2 * iter + 1;
+
+	char *mv_dir = random_subdir(iter);
 
 
 	// Isolate the name of the executable
@@ -135,29 +150,29 @@ void teleport(const char* file_name)
 
 	// Move executable by renaming it
 	int mv_name_len = strlen(mv_dir) + strlen(bin_name) + 1;
-	char* mv_name = (char *)malloc(sizeof(char) * mv_name_len);
+	char *mv_name = (char *)malloc(sizeof(char) * mv_name_len);
 	sprintf(mv_name, "%s/%s", mv_dir, bin_name);
 	rename(file_name, mv_name);
 
-	//printf("%s -> %s\n", file_name, mv_name);
+	printf(" %s -> %s\n", file_name, mv_name);
 }
 
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	int health = *(flag + flag_len);
-	
+
 	srand(time(NULL) - health);
 
 	// Catch error that should never happen
-	// (it you remove this check, the compiler screams at you for never using argc)
+	// (it you remove this check, it screams at you for never using argc)
 	if(argc < 1)
 	{
 		fprintf(stderr, "Something went horribly wrong\n");
 		exit(-1);
 	}
 
-	char* org_name = argv[0];
+	char *org_name = argv[0];
 
 
 	// Scream in pain and die
@@ -181,7 +196,7 @@ int main(int argc, char* argv[])
 
 
 	// Move to random directory
-	teleport(org_name);
+	teleport(org_name, health);
 
 
 	return 0;
