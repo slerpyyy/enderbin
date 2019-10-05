@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+//#define DEBUG
 
 const char *flag = "$::ENDER::FLAG::\x05";
 const int flag_len = 16;
@@ -14,6 +15,7 @@ const int damage_len = 3;
 
 const char *death[] = {"KRHHHHHHH", "AAAAAAAAAAAAAAAA!!!!"};
 const int death_len = 2;
+
 
 
 void rewrite(const char *file_name, int health)
@@ -51,7 +53,7 @@ void rewrite(const char *file_name, int health)
 		if(prog == flag_len)fputc((char)(health), out_file);
 		else fputc(curr, out_file);
 
-		if(curr == *(flag + prog))prog++;
+		if(curr == flag[prog])prog++;
 		else if(curr == *flag)prog = 1;
 		else prog = 0;
 	}
@@ -77,7 +79,11 @@ void rewrite(const char *file_name, int health)
 		fprintf(stderr, "Could not replace source file\n");
 		exit(-1);
 	}
+
+	// Free tmp file name
+	free(tmp_name);
 }
+
 
 
 char *random_subdir(int iter)
@@ -92,6 +98,7 @@ char *random_subdir(int iter)
 		srcdir = opendir(dir_name);
 		char *found_name = NULL;
 		seed = rand();
+
 
 		// Loop over all files in pwd
 		while((dent = readdir(srcdir)) != NULL)
@@ -116,6 +123,8 @@ char *random_subdir(int iter)
 			if((seed /= 2) == 0)break;
 		}
 
+
+		// Update dir_name
 		char *parent = dir_name;
 		int dir_name_len = strlen(parent) + strlen(found_name) + 1;
 		dir_name = (char *)malloc(sizeof(char) * dir_name_len);
@@ -124,6 +133,7 @@ char *random_subdir(int iter)
 
 	return dir_name;
 }
+
 
 
 void teleport(const char *file_name, int health)
@@ -141,7 +151,7 @@ void teleport(const char *file_name, int health)
 	int argv0_len = strlen(file_name);
 	for(int i=0; i < argv0_len - 1; i++)
 	{
-		if(*(file_name+i) == '/')
+		if(file_name[i] == '/')
 		{
 			bin_name = (char *)file_name + i + 1;
 		}
@@ -152,10 +162,19 @@ void teleport(const char *file_name, int health)
 	int mv_name_len = strlen(mv_dir) + strlen(bin_name) + 1;
 	char *mv_name = (char *)malloc(sizeof(char) * mv_name_len);
 	sprintf(mv_name, "%s/%s", mv_dir, bin_name);
-	rename(file_name, mv_name);
 
+#ifdef DEBUG
 	printf(" %s -> %s\n", file_name, mv_name);
+#else
+	rename(file_name, mv_name);
+#endif
+
+
+	// Free all the things
+	free(mv_dir);
+	free(mv_name);
 }
+
 
 
 int main(int argc, char *argv[])
