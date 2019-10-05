@@ -1,10 +1,9 @@
 # enderbin
 *Linux File System Game*
 
-![win-support](https://img.shields.io/badge/windows%20support-NO!-red)
+![linux-only](https://img.shields.io/badge/linux-only-brightgreen)
 ![works-on](https://img.shields.io/badge/works%20on-my%20mashine%E2%84%A2-orange)
 ![fortnite-sucks](https://img.shields.io/badge/fortnite-sucks-blue)
-
 
 enderbin is a small game you can play inside your file system. Your goal is to find and run the enderbin. Every time the binary is executed, it loses one life and teleports to a different nearby folder. If it reaches zero lives, you win!
 

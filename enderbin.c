@@ -99,14 +99,15 @@ char *random_subdir()
 		}
 
 		// Skip everything that isn't a directory
-		if(!S_ISDIR(st.st_mode))continue;
+		if(S_ISDIR(st.st_mode) == 0)continue;
+
+		// Skip the current directory
+		if(strcmp(dent->d_name, ".") == 0)continue;
 
 		// Save directory
-		if(seed & 1 || dir_name == NULL)
-		{
-			dir_name = dent->d_name;
-		}
+		if(seed & 1 || dir_name == NULL)dir_name = dent->d_name;
 
+		// Update random seed
 		if((seed /= 2) == 0)break;
 	}
 
@@ -119,6 +120,7 @@ void teleport(const char* file_name)
 	// Find a directory to teleport to
 	char* mv_dir = random_subdir();
 
+
 	// Isolate the name of the executable
 	char *bin_name = NULL;
 	int argv0_len = strlen(file_name);
@@ -130,12 +132,14 @@ void teleport(const char* file_name)
 		}
 	}
 
+
 	// Move executable by renaming it
 	int mv_name_len = strlen(mv_dir) + strlen(bin_name) + 1;
 	char* mv_name = (char *)malloc(sizeof(char) * mv_name_len);
 	sprintf(mv_name, "%s/%s", mv_dir, bin_name);
-	printf("%s -> %s\n", file_name, mv_name);
 	rename(file_name, mv_name);
+
+	//printf("%s -> %s\n", file_name, mv_name);
 }
 
 
